@@ -3,6 +3,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+import math
+
 class magface(nn.Module):
 
     def __init__(self, scale = 80, emb_size = 32, num_class = 10):
@@ -17,6 +19,8 @@ class magface(nn.Module):
 
         self.u_m = 0.8
         self.l_m = 0.4
+
+        self.easy_margin = True
 
         # weight matrix init
         self.weight_matrix = torch.nn.Parameter(torch.empty(self.num_cls, self.emb_size))
@@ -58,10 +62,18 @@ class magface(nn.Module):
         index = F.one_hot(label, num_classes = self.num_cls).type(dtype = torch.bool)
 
         # 7. sim 
-        sim = sim + index * (cos_add_m - cos)
+        # sim = sim + index * (cos_add_m - cos)
+        if self.easy_margin:
+            final_sim = torch.where(
+                sim > 0, cos_add_m, theta)
+        else:
+            th = math.cos(math.pi - m_a)
+            sinmm = math.sin(math.pi - m_a) * m_a
+            final_sim = torch.where(
+                sim > th, cos_add_m, theta - sinmm)
 
         # 8. s * sim
-        sim = sim * self.scale
+        final_sim = final_sim * self.scale
 
         # loss = self.criterion(sim, label)
         loss = F.cross_entropy(sim, label, reduction='none')
