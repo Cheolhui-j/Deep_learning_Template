@@ -20,11 +20,11 @@ class magface(nn.Module):
         self.u_m = 0.8
         self.l_m = 0.4
 
-        self.easy_margin = False
+        self.easy_margin = True
 
         # weight matrix init
-        self.weight_matrix = torch.nn.Parameter(torch.empty(self.num_cls, self.emb_size))
-        nn.init.xavier_normal_(self.weight_matrix)
+        self.weight_matrix = torch.nn.Parameter(torch.empty(self.num_cls, self.emb_size).fill_(0.1))
+        # nn.init.xavier_normal_(self.weight_matrix)
 
         # self.criterion = nn.CrossEntropyLoss()
 
@@ -43,10 +43,10 @@ class magface(nn.Module):
     def forward_old(self, embedding, label):
 
         # 1. x, w normalize & 2. calculate x * w = similarity
-        sim = nn.functional.linear(nn.functional.normalize(embedding ,p=2, dim=1, eps=1e-12), nn.functional.normalize(self.weight_matrix,p=2, dim=1, eps=1e-12))
+        sim = nn.functional.linear(nn.functional.normalize(embedding ,p=2, dim=1, eps=1e-12), nn.functional.normalize(self.weight_matrix,p=2, dim=1, eps=1e-12)).clamp(-1, 1)
 
         # only magface
-        embedding_norm = torch.norm(embedding, dim=1, keepdim=True)
+        embedding_norm = torch.norm(embedding, dim=1, keepdim=True).clamp(self.l_a, self.u_a)
         m_a = self._calc_m(embedding_norm)
         g_a = self._calc_g(embedding_norm)
         lambda_g = self._calc_lambda() 
@@ -55,6 +55,7 @@ class magface(nn.Module):
         # cos = sim[:, label]
         gt_label = label.unsqueeze(axis=-1)
         cos = torch.gather(sim, 1, gt_label)
+        # cos = sim
 
         # 4. calculate theta
         theta = torch.acos(cos)
@@ -76,6 +77,8 @@ class magface(nn.Module):
             cos_add_m = torch.where(
                 sim > th, cos_add_m, theta - sinmm)
 
+        # cos_add_m, cos = self.scale * cos_add_m, self.scale * cos 
+
         sim = sim + index * (cos_add_m - cos)
 
         # 8. s * sim
@@ -84,15 +87,15 @@ class magface(nn.Module):
         # loss = self.criterion(sim, label)
         loss = F.cross_entropy(sim, label, reduction='none')
 
-        return loss.mean() + lambda_g * g_a
+        return loss.mean() + lambda_g * g_a 
 
     def forward(self, embedding, label):
 
         # 1. x, w normalize & 2. calculate x * w = similarity
-        sim = nn.functional.linear(nn.functional.normalize(embedding ,p=2, dim=1, eps=1e-12), nn.functional.normalize(self.weight_matrix,p=2, dim=1, eps=1e-12))
+        sim = nn.functional.linear(nn.functional.normalize(embedding ,p=2, dim=1, eps=1e-12), nn.functional.normalize(self.weight_matrix,p=2, dim=1, eps=1e-12)).clamp(-1, 1)
 
         # only magface
-        embedding_norm = torch.norm(embedding, dim=1, keepdim=True)
+        embedding_norm = torch.norm(embedding, dim=1, keepdim=True).clamp(self.l_a, self.u_a)
         m_a = self._calc_m(embedding_norm)
         cos_m, sin_m = torch.cos(m_a), torch.sin(m_a)
 
@@ -117,9 +120,10 @@ class magface(nn.Module):
         one_hot = torch.zeros_like(cos)
         one_hot.scatter_(1, label.view(-1, 1), 1.0)
         output = one_hot * cos_m + (1.0 - one_hot) * cos
+
         loss = F.cross_entropy(output, label, reduction='mean')
 
-        return loss.mean() + lambda_g * g_a
+        return loss.mean() + lambda_g * g_a 
         
 
 if __name__ == "__main__":
@@ -127,9 +131,16 @@ if __name__ == "__main__":
     emb = torch.rand(64, 32)
     label = torch.randint(high=9, size=(64,))
 
-    loss = magface()
-    loss2 = magface()
+    # emb = torch.empty(64, 32).fill_(0.01)
+    # label = torch.empty(64).fill_(1).type(torch.long)
 
-    print(loss(emb, label))
-    print(loss2.forward_old(emb, label))
+    loss = magface()
+
+    out = loss(emb, label)
+    out2 = loss.forward_old(emb, label)
+
+    print(out)
+    print(out2)
+
+
 
