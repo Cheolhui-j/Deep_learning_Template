@@ -5,7 +5,8 @@ from os import mkdir
 
 import torch.nn.functional as F
 
-sys.path.append('.')
+sys.path.append('./project_template')
+print(os.getcwd())
 from config import cfg
 from data import make_data_loader
 from engine.example_trainer import do_train

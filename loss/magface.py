@@ -23,8 +23,8 @@ class magface(nn.Module):
         self.easy_margin = True
 
         # weight matrix init
-        self.weight_matrix = torch.nn.Parameter(torch.empty(self.num_cls, self.emb_size).fill_(0.1))
-        # nn.init.xavier_normal_(self.weight_matrix)
+        self.weight_matrix = torch.nn.Parameter(torch.empty(self.num_cls, self.emb_size))
+        nn.init.xavier_normal_(self.weight_matrix)
 
         # self.criterion = nn.CrossEntropyLoss()
 
