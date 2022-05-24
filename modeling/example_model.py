@@ -2,7 +2,7 @@ import numpy as np
 import torch.nn.functional as F
 from torch import nn, Tensor
 
-from layers.conv_layers import conv3x3
+from layers.conv_layers import conv3x3, conv1x1, convdw
 
 
 ##############################################################################
@@ -100,48 +100,6 @@ class ResNet18(nn.Module):
 ##############################################################################
 
 # Mobile ResNet
-
-# --------------------------------------------
-# 3x3 convolution layer
-# --------------------------------------------
-def conv3x3(in_planes, out_planes, stride=1, groups=1):
-    """ 3x3 convolution with padding = 1
-
-    Input shape:
-        (batch size, in_planes, height, width)
-    Output shape:
-        (batch size, out_planes, height, width)
-    """
-    return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride, padding=1, groups=groups,
-                     bias=False)
-
-# --------------------------------------------
-# 1x1 convolution layer
-# --------------------------------------------
-def conv1x1(in_planes, out_planes, stride=1, groups=1):
-    """ 1x1 convolution
-
-    Input shape:
-        (batch size, in_planes, height, width)
-    Output shape:
-        (batch size, out_planes, height, width)
-    """
-    return nn.Conv2d(in_planes, out_planes, kernel_size=1, stride=stride, padding=0, groups=groups,
-                     bias=False)
-
-# --------------------------------------------
-# depthwise convolution layer
-# --------------------------------------------
-def convdw(in_planes, out_planes, stride=1, groups=1):
-    """ depthwise convolution
-
-    Input shape:
-        (batch size, in_planes, height, width)
-    Output shape:
-        (batch size, out_planes, height, width)
-    """
-    return nn.Conv2d(in_planes, in_planes, kernel_size=3, stride=stride, padding=1, groups=groups,
-                     bias=False)
 
 def _make_divisible(value, divisor=8):
     new_value = max(divisor, int(value + divisor / 2) // divisor * divisor)
