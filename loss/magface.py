@@ -4,23 +4,26 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import math
+import sys
+sys.path.append('../')
+from config import cfg
 
 class magface(nn.Module):
 
-    def __init__(self, scale = 80, emb_size = 32, num_class = 10):
+    def __init__(self, cfg, num_class=10):
         super(magface, self).__init__()
         
-        self.scale = scale
-        self.emb_size = emb_size
+        self.scale = cfg.loss_s
+        self.emb_size = cfg.emd_size
         self.num_cls = num_class
 
-        self.u_a = 110
-        self.l_a = 10
+        self.u_a = cfg.u_a
+        self.l_a = cfg.l_a
 
-        self.u_m = 0.8
-        self.l_m = 0.4
+        self.u_m = cfg.u_m
+        self.l_m = cfg.l_m
 
-        self.easy_margin = True
+        self.easy_margin = cfg.easy_margin
 
         # weight matrix init
         self.weight_matrix = torch.nn.Parameter(torch.empty(self.num_cls, self.emb_size))
@@ -128,19 +131,17 @@ class magface(nn.Module):
 
 if __name__ == "__main__":
 
-    emb = torch.rand(64, 32)
+    emb = torch.rand(64, 512)
     label = torch.randint(high=9, size=(64,))
 
     # emb = torch.empty(64, 32).fill_(0.01)
     # label = torch.empty(64).fill_(1).type(torch.long)
 
-    loss = magface()
+    loss = magface(cfg)
 
     out = loss(emb, label)
-    out2 = loss.forward_old(emb, label)
 
     print(out)
-    print(out2)
 
 
 

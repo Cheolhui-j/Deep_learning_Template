@@ -2,7 +2,90 @@ import numpy as np
 import torch.nn.functional as F
 from torch import nn, Tensor
 
+import sys
+
+sys.path.append('../')
+from config import cfg
 from layers.conv_layers import conv3x3, conv1x1, convdw
+
+
+# ====================================== Modified Stem Block =======================================
+
+class ModifiedStemBlock(nn.Module):
+    def __init__(self, inplanes, planes):
+        super(ModifiedStemBlock, self).__init__()
+        self.stem1 = nn.Sequential(
+            conv3x3(inplanes, planes, stride=1),
+            nn.BatchNorm2d(planes),
+            nn.PReLU(num_parameters=planes)
+        )
+        self.stem2a = nn.Sequential(
+            conv1x1(planes, planes//2, stride=1),
+            nn.BatchNorm2d(planes//2),
+            nn.PReLU(num_parameters=planes//2)
+        )
+        self.stem2b = nn.Sequential(
+            conv3x3(planes//2, planes, stride=2),
+            nn.BatchNorm2d(planes),
+            nn.PReLU(num_parameters=planes)
+        )
+        self.stem3 = nn.Sequential(
+            conv1x1(2*planes, planes, stride=1),
+            nn.BatchNorm2d(planes),
+            nn.PReLU(num_parameters=planes)
+        )
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+    def forward(self, x):
+        out = self.stem1(x)
+
+        branch2 = self.stem2a(out)
+        branch2 = self.stem2b(branch2)
+        branch1 = self.pool(out)
+
+        out = torch.cat([branch1, branch2], 1)
+        out = self.stem3(out)
+
+        return out
+
+class ModifiedStemBlock2(nn.Module):
+    def __init__(self, inplanes, planes):
+        super(ModifiedStemBlock2, self).__init__()
+        self.stem1 = nn.Sequential(
+            conv3x3(inplanes, planes, stride=2),
+            nn.BatchNorm2d(planes),
+            nn.PReLU(num_parameters=planes)
+        )
+        self.stem2a = nn.Sequential(
+            conv1x1(planes, planes//2, stride=1),
+            nn.BatchNorm2d(planes//2),
+            nn.PReLU(num_parameters=planes//2)
+        )
+        self.stem2b = nn.Sequential(
+            conv3x3(planes//2, planes, stride=2),
+            nn.BatchNorm2d(planes),
+            nn.PReLU(num_parameters=planes)
+        )
+        self.stem3 = nn.Sequential(
+            conv1x1(2*planes, planes, stride=1),
+            nn.BatchNorm2d(planes),
+            nn.PReLU(num_parameters=planes)
+        )
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+
+    def forward(self, x):
+        out = self.stem1(x)
+
+        branch2 = self.stem2a(out)
+        branch2 = self.stem2b(branch2)
+        branch1 = self.pool(out)
+
+        out = torch.cat([branch1, branch2], 1)
+        out = self.stem3(out)
+
+        return out
+
+# ==================================================================================================
 
 
 ##############################################################################
@@ -322,3 +405,12 @@ def MobileResNet100(conf, **kwargs):
 
     return model
 
+
+
+if __name__ == "__main__":
+
+    # 나중엔 config에 정의된 모델별로 load할 수 있도록 수정 바람.
+
+    model = MobileResNet100(cfg)
+
+    print(model)

@@ -3,24 +3,20 @@ import torchvision.transforms as T
 from .transfroms import RandomErasing
 
 def build_transforms(cfg, is_train=True):
-    normalize_transform = T.Normalize(mean=cfg.INPUT.PIXEL_MEAN, std=cfg.INPUT.PIXEL_STD)
+    normalize_transform = T.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
     if is_train:
         transform = T.Compose(
             [
-                T.RandomResizedCrop(
-                    size = cfg.INPUT.SIZE_TRAIN,
-                    scale = (cfg.INPUT.MIN_SCALE_TRAIN, cfg.INPUT.MAX_SCALE_TRAIN)
-                ),
-                T.RandomHorizontalFlip(p=cfg.INPUT.PROB),
+                T.Resize((112, 112)),
+                T.RandomHorizontalFlip(),
                 T.ToTensor(),
                 normalize_transform,
-                RandomErasing(probability = cfg.INPUT.PROB, mean=cfg.INPUT.PIXEL_MEAN)
             ]
         )
     else:
         transform = T.Compose(
             [
-                T.Resize(cfg.INPUT.SIZE_TEST),
+                T.Resize((112, 112)),
                 T.ToTensor(),
                 normalize_transform
             ]

@@ -19,7 +19,7 @@ from utils.logger import setup_logger
 
 def train(cfg):
     model = build_model(cfg)
-    device = cfg.MODEL.DEVICE
+    device = cfg.device
 
     optimizer = make_optimizer(cfg, model)
     # scheduler = None
@@ -31,7 +31,7 @@ def train(cfg):
     val_loader = make_data_loader(cfg, is_train=False)
 
     # loss = circle_loss()
-    loss = magface()
+    loss = magface(cfg)
 
     do_train(
         cfg, 
@@ -63,7 +63,7 @@ def main():
     cfg.merge_from_list(args.opts)
     cfg.freeze()
 
-    output_dir = cfg.OUTPUT_DIR
+    output_dir = cfg.model_dir
     if output_dir and not os.path.exists(output_dir):
         mkdir(output_dir)
     
