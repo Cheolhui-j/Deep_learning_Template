@@ -1,5 +1,5 @@
 import torch
-from lr_scheduler import scheduler_LR
+from .lr_scheduler import scheduler_LR
 
 import sys
 

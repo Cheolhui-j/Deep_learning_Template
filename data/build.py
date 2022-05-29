@@ -3,7 +3,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import torchvision.transforms as transforms
-from datasets.img2lmdb import ImageFolderLMDB
+from .datasets.img2lmdb import ImageFolderLMDB
 from torchvision.datasets import ImageFolder
 from pathlib import Path
 import bcolz
@@ -13,8 +13,8 @@ import os
 import sys
 from skimage import io, transform
 
-from datasets.mnist import MNIST
-from transforms import build_transforms
+from .datasets.mnist import MNIST
+from .transforms import build_transforms
 
 sys.path.append('../')
 from config import cfg

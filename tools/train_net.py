@@ -5,7 +5,7 @@ from os import mkdir
 
 import torch.nn.functional as F
 
-sys.path.append('./Deep_learning_Template')
+sys.path.append('../')
 print(os.getcwd())
 from config import cfg
 from data import make_data_loader

@@ -44,11 +44,11 @@ def do_train(
     scheduler,
     loss_fn
 ):
-    log_period = cfg.SOLVER.LOG_PERIOD
-    checkpoint_period = cfg.SOLVER.CHECKPOINT_PERIOD
-    output_dir = cfg.OUTPUT_DIR
-    device = cfg.MODEL.DEVICE
-    epochs = cfg.SOLVER.MAX_EPOCHS
+    log_period = cfg.view_freq
+    checkpoint_period = cfg.view_valid_freq
+    output_dir = cfg.model_dir
+    device = cfg.device
+    epochs = cfg.num_epoch
     scheduler = LRScheduler(scheduler)
     
     model = model.to(device)

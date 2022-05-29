@@ -42,7 +42,7 @@ config.model_dir = './models'
 # Hyper params
 # ---------------------------------------------------------------------------- #
 
-config.batch_size = 512
+config.batch_size = 32
 config.init_lr = 0.1
 config.lr_scheduler = 'MultiStep'
 config.lr_decay_epoch = [8, 16, 24, 32, 40]
