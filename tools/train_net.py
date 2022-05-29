@@ -27,11 +27,11 @@ def train(cfg):
 
     arguments = {}
 
-    train_loader = make_data_loader(cfg, is_train=True)
-    val_loader = make_data_loader(cfg, is_train=False)
+    train_loader, num_class = make_data_loader(cfg, is_train=True)
+    val_loader, _ = make_data_loader(cfg, is_train=False)
 
     # loss = circle_loss()
-    loss = magface(cfg)
+    loss = magface(cfg, num_class=num_class)
 
     do_train(
         cfg, 

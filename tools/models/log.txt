@@ -1,3 +1,5 @@
-2022-05-29 13:47:34,948 template_model INFO : Using 1 GPUS
-2022-05-29 13:47:34,948 template_model INFO : Namespace(config_file='', opts=[])
-2022-05-29 13:47:40,173 template_model.train INFO : Start training
+2022-05-29 14:48:55,540 template_model INFO : Using 1 GPUS
+2022-05-29 14:48:55,540 template_model INFO : Namespace(config_file='', opts=[])
+2022-05-29 14:48:59,939 template_model.train INFO : Start training
+2022-05-29 14:49:09,246 template_model.train INFO : Epoch[1] Iteration[20/181958] LR : 0.1 Loss: 44.45
+2022-05-29 14:49:14,722 template_model.train INFO : Epoch[1] Iteration[40/181958] LR : 0.1 Loss: 44.06
