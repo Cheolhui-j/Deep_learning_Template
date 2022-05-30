@@ -8,7 +8,7 @@ import torch.nn.functional as F
 sys.path.append('../')
 print(os.getcwd())
 from config import cfg
-from data import make_data_loader
+from data import make_data_loader, get_val_data
 from engine.example_trainer import do_train
 from modeling import build_model
 from solver import make_optimizer, make_scheduler
@@ -28,7 +28,15 @@ def train(cfg):
     arguments = {}
 
     train_loader, num_class = make_data_loader(cfg, is_train=True)
-    val_loader, _ = make_data_loader(cfg, is_train=False)
+    # val_loader, _ = make_data_loader(cfg, is_train=False)
+
+    # get the validation data
+    val_dataset = []
+    val_labels = []
+    for val_name in cfg.val_dataset:
+        val_data, val_label = get_val_data(cfg.val_dataset_dir, val_name)
+        val_dataset.append(val_data)
+        val_labels.append(val_label)  
 
     # loss = circle_loss()
     loss = magface(cfg, num_class=num_class)
@@ -37,7 +45,9 @@ def train(cfg):
         cfg, 
         model,
         train_loader,
-        val_loader,
+        val_dataset,
+        val_labels,
+        None,
         optimizer,
         #None,
         scheduler,

@@ -1,5 +1,5 @@
-2022-05-29 14:48:55,540 template_model INFO : Using 1 GPUS
-2022-05-29 14:48:55,540 template_model INFO : Namespace(config_file='', opts=[])
-2022-05-29 14:48:59,939 template_model.train INFO : Start training
-2022-05-29 14:49:09,246 template_model.train INFO : Epoch[1] Iteration[20/181958] LR : 0.1 Loss: 44.45
-2022-05-29 14:49:14,722 template_model.train INFO : Epoch[1] Iteration[40/181958] LR : 0.1 Loss: 44.06
+2022-05-30 14:09:06,723 template_model INFO : Using 1 GPUS
+2022-05-30 14:09:06,724 template_model INFO : Namespace(config_file='', opts=[])
+2022-05-30 14:09:10,459 template_model.train INFO : Start training
+2022-05-30 14:09:19,921 template_model.train INFO : Epoch[1] Iteration[20/181958] LR : 0.1 Loss: 43.91
+2022-05-30 14:11:58,963 template_model.train INFO : Epoch[1] Iteration[40/181958] LR : 0.1 Loss: 43.73
