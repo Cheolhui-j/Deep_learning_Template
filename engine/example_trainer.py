@@ -9,7 +9,7 @@ from ignite.metrics.recall import Recall
 from ignite.contrib.handlers.param_scheduler import LRScheduler
 from ignite.contrib.handlers.tensorboard_logger import *
 
-from eval import ROC
+from eval import ROC, pair_matching_accuracy
 
 def output_transform(output):
     thresh = 0.75
@@ -39,7 +39,9 @@ def do_train(
     cfg, 
     model,
     train_loader,
-    val_loader,
+    val_dataset,
+    val_labels,
+    test_loader,
     optimizer,
     scheduler,
     loss_fn
@@ -50,6 +52,7 @@ def do_train(
     device = cfg.device
     epochs = cfg.num_epoch
     scheduler = LRScheduler(scheduler)
+    tb_logs = cfg.tb_logs
     
     model = model.to(device)
     loss_fn = loss_fn.to(device)
@@ -59,8 +62,7 @@ def do_train(
     trainer = create_supervised_trainer(model, optimizer, loss_fn, device=device)
 
     # evaluator = create_supervised_evaluator(model, metrics={'accuracy':Accuracy(), 'loss':Loss(loss_fn)}, device=device)
-    evaluator = create_supervised_evaluator(model, metrics={'accuracy':Accuracy(output_transform=output_transform), 
-        'precision':Precision(output_transform=output_transform), 'recall':Recall(output_transform=output_transform), 'roc' : ROC(), 'loss':Loss(loss_fn)}, device=device)
+    evaluator = create_supervised_evaluator(model, metrics={'roc' : ROC(), 'loss':Loss(loss_fn)}, device=device)
     
     checkpointer = ModelCheckpoint(output_dir, 'mnist', n_saved=10, require_empty=False)
     timer = Timer(average=True)
@@ -71,52 +73,53 @@ def do_train(
                  pause=Events.ITERATION_COMPLETED, step=Events.ITERATION_COMPLETED)
     
     RunningAverage(output_transform=lambda x: x).attach(trainer, 'avg_loss')
-        
-#     tb_logger = TensorboardLogger(log_dir="output/tb_logs")
-    
-#     tb_logger.attach_output_handler(
-#         trainer,
-#         event_name=Events.ITERATION_COMPLETED,
-#         tag="Training",
-#         output_transform=lambda loss: {"loss": loss}
-#     )
 
-#     tb_logger.attach_output_handler(
-#         evaluator,
-#         event_name=Events.EPOCH_COMPLETED,
-#         tag="validation",
-#         metric_names=["accuracy", "precision", "recall"],
-#         global_step_transform=global_step_from_engine(trainer)
-#     )
+    # if tb_logs:
+    #     tb_logger = TensorboardLogger(log_dir=output_dir + "/tb_logs")
+        
+    #     tb_logger.attach_output_handler(
+    #         trainer,
+    #         event_name=Events.ITERATION_COMPLETED,
+    #         tag="Training",
+    #         output_transform=lambda loss: {"loss": loss}
+    #     )
+
+    #     tb_logger.attach_output_handler(
+    #         evaluator,
+    #         event_name=Events.EPOCH_COMPLETED,
+    #         tag="validation",
+    #         metric_names=["accuracy", "precision", "recall"],
+    #         global_step_transform=global_step_from_engine(trainer)
+    #     )
 
     @trainer.on(Events.ITERATION_COMPLETED)
     def log_training_loss(engine):
         iter = (engine.state.iteration - 1) % len(train_loader) + 1
 
         if iter % log_period == 0:
+            # print and save performance
             logger.info("Epoch[{}] Iteration[{}/{}] LR : {} Loss: {:.2f}"
                         .format(engine.state.epoch, iter, len(train_loader), optimizer.param_groups[0]['lr'], engine.state.metrics['avg_loss']))
+            for i, val_name in enumerate(cfg.val_dataset):
+                print('[{}]'.format(val_name))
+                accuracy, inf_time, _ = pair_matching_accuracy(model, val_dataset[i], val_labels[i], cfg.emd_size, device)
                         
     @trainer.on(Events.EPOCH_COMPLETED)
     def log_training_results(engine):
         evaluator.run(train_loader)
         metrics = evaluator.state.metrics
-        avg_accuracy = metrics['accuracy']
         avg_loss = metrics['loss']
-        logger.info("Training Results - Epoch: {} Avg accuracy: {} Avg Loss: {}"
+        logger.info("Training Results - Epoch: {} Avg Loss: {}"
                     .format(engine.state.epoch, avg_accuracy, avg_loss))
 
-    if val_loader is not None:
+    if test_loader is not None:
         @trainer.on(Events.EPOCH_COMPLETED)
         def log_validation_results(engine):
             evaluator.run(val_loader)
             metrics = evaluator.state.metrics
-            acc = metrics['accuracy']
-            precision = metrics['precision']
-            recall = metrics['recall']
             roc = metrics["roc"]
-            logger.info("Validation Results - Epoch: {} Accuracy: {} Precision: {} recall: {} ROC : {}"
-                        .format(engine.state.epoch, acc, precision, recall, roc)
+            logger.info("Validation Results - Epoch: {} ROC : {}"
+                        .format(engine.state.epoch, roc)
                         )
 
     # adding handlers using `trainer.on` decorator API

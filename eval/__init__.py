@@ -1,1 +1,1 @@
-from .evaluator import ROC
+from .evaluator import ROC, pair_matching_accuracy

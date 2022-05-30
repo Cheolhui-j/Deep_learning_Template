@@ -33,7 +33,7 @@ config.val_dataset = ['lfw', 'agedb_30', 'cfp_fp', 'cfp_ff', 'calfw', 'cplfw']
 # directory
 # -----------------------------------------------------------------------------
 
-config.train_dataset_dir = '/workspace/hdd2/datasets_fr/train/ms1m_arcface'
+config.train_dataset_dir = '/workspace/hdd2/FR/datasets/train/ms1m_arcface'
 config.val_dataset_dir = '/workspace/hdd2/FR/datasets/validation'
 config.test_dataset_dir = '/workspace/hdd2/FR/datasets/test'
 config.model_dir = './models'
@@ -52,6 +52,7 @@ config.num_epoch = 20
 config.device = 'cuda'
 config.view_freq = 20
 config.view_valid_freq = 1
+config.tb_logs =False
 
 # ---------------------------------------------------------------------------- #
 # Network definition
