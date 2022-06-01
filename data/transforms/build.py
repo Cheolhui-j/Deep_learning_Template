@@ -16,6 +16,7 @@ def build_transforms(cfg, is_train=True):
     else:
         transform = T.Compose(
             [
+                T.ToPILImage(),
                 T.Resize((112, 112)),
                 T.ToTensor(),
                 normalize_transform

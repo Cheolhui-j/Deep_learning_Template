@@ -28,6 +28,8 @@ config.optimizer = 'SGD'
 config.train_dataset = 'ms1m_arcface'
 config.train_dataset_type = 'lmdb'
 config.val_dataset = ['lfw', 'agedb_30', 'cfp_fp', 'cfp_ff', 'calfw', 'cplfw']
+config.test_dataset = 'suprema_visual'
+config.test_dataset_type = 'imgs'
 
 # -----------------------------------------------------------------------------
 # directory
@@ -42,7 +44,7 @@ config.model_dir = './models'
 # Hyper params
 # ---------------------------------------------------------------------------- #
 
-config.batch_size = 32
+config.batch_size = 128
 config.init_lr = 0.1
 config.lr_scheduler = 'MultiStep'
 config.lr_decay_epoch = [8, 16, 24, 32, 40]
@@ -52,7 +54,7 @@ config.num_epoch = 20
 config.device = 'cuda'
 config.view_freq = 20
 config.view_valid_freq = 1
-config.tb_logs =False
+config.tb_logs =True
 
 # ---------------------------------------------------------------------------- #
 # Network definition

@@ -4,6 +4,7 @@ import torch.nn as nn
 import numpy as np
 import torchvision.transforms as transforms
 from .datasets.img2lmdb import ImageFolderLMDB
+from .datasets.img2csv import ImageFolderCSV
 from torchvision.datasets import ImageFolder
 from pathlib import Path
 import bcolz
@@ -25,24 +26,36 @@ def build_mnist_dataset(transforms, mnist_path, is_train=True):
     return datasets, num_class
 
 def build_lmdb_dataset(transforms, lmdb_path, lmdb_name, is_train=True):
-    train_data_transform = transforms
+    data_transform = transforms
     if lmdb_path is None:
         print("lmdb path is empty\n")
     lmdb_path = os.path.join(lmdb_path, lmdb_name + '.lmdb')
-    datasets = ImageFolderLMDB(lmdb_path, train_data_transform)
+    datasets = ImageFolderLMDB(lmdb_path, data_transform)
     num_class = datasets[-1][1] + 1
 
     return datasets, num_class
 
 def build_img_dataset(transforms, img_path, is_train=True):
-    train_data_transform = transforms
+    data_transform = transforms
     if img_path is None:
         print("lmdb path is empty\n")
     img_path = os.path.join(img_path, 'imgs')
-    datasets = ImageFolder(img_path, train_data_transform)
+    datasets = ImageFolder(img_path, data_transform)
     num_class = datasets[-1][1] + 1
 
     return datasets, num_class
+
+def build_csv_dataset(transforms, csv_path, csv_name, is_train=False):
+    data_transform = transforms
+    if csv_path is None:
+        print("csv path is empty\n")
+    img_path = os.path.join(csv_path, csv_name)
+    img_path = os.path.join(img_path, 'imgs')
+    csv_path = os.path.join(img_path, csv_name + ".csv")
+    dataset = ImageFolderCSV(csv_path=csv_path, root_dir=img_path, transform=data_transform)
+    num_class = dataset[-1][1] + 1
+
+    return dataset, num_class
 
 def make_data_loader(cfg, is_train=True):
     if is_train:
@@ -56,12 +69,18 @@ def make_data_loader(cfg, is_train=True):
 
     datasets = None
     # train_data_path = os.path.join(cfg.train_dataset_dir, cfg.train_dataset)
-    if cfg.train_dataset_type == "mnist" :
-        datasets, num_class = build_mnist_dataset(transforms, "./", is_train)
-    elif cfg.train_dataset_type == "lmdb" :
-        datasets, num_class = build_lmdb_dataset(transforms, cfg.train_dataset_dir, cfg.train_dataset, is_train)
-    else:
-        datasets, num_class = build_img_dataset(transform, cfg.train_dataset_dir, is_train)
+    if is_train:
+        if cfg.train_dataset_type == "mnist" :
+            datasets, num_class = build_mnist_dataset(transforms, "./", is_train)
+        elif cfg.train_dataset_type == "lmdb" :
+            datasets, num_class = build_lmdb_dataset(transforms, cfg.train_dataset_dir, cfg.train_dataset, is_train)
+        else:
+            datasets, num_class = build_img_dataset(transform, cfg.train_dataset_dir, is_train)
+    else :
+        if cfg.test_dataset_type == "mnist" :
+            datasets, num_class = build_minist_dataset(transforms, "./", is_train)
+        else :
+            datasets, num_class = build_csv_dataset(transforms, cfg.test_dataset_dir, cfg.test_dataset, is_train)
 
     num_workers = cfg.num_workers
     data_loader = DataLoader(
@@ -88,7 +107,7 @@ def get_val_data(data_path, val_target):
 
 if __name__ == "__main__":
 
-    dataloader, num_class = make_data_loader(cfg, False)
+    dataloader, num_class = make_data_loader(cfg, True)
     print(dataloader, num_class)
 
     val_dataset = []
@@ -97,4 +116,6 @@ if __name__ == "__main__":
         val_data, val_label = get_val_data(cfg.val_dataset_dir, val_name)
         val_dataset.append(val_data)
         val_labels.append(val_label)
-        print(val_name, val_data, val_label)   
+
+    test_dataloader, num_class = make_data_loader(cfg, False)
+    print(test_dataloader, num_class)

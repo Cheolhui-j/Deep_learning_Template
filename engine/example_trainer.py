@@ -64,7 +64,7 @@ def do_train(
     # evaluator = create_supervised_evaluator(model, metrics={'accuracy':Accuracy(), 'loss':Loss(loss_fn)}, device=device)
     evaluator = create_supervised_evaluator(model, metrics={'roc' : ROC(), 'loss':Loss(loss_fn)}, device=device)
     
-    checkpointer = ModelCheckpoint(output_dir, 'mnist', n_saved=10, require_empty=False)
+    checkpointer = ModelCheckpoint(output_dir, 'ms_1m', n_saved=10, require_empty=False)
     timer = Timer(average=True)
 
     trainer.add_event_handler(Events.EPOCH_COMPLETED, scheduler)
@@ -74,23 +74,23 @@ def do_train(
     
     RunningAverage(output_transform=lambda x: x).attach(trainer, 'avg_loss')
 
-    # if tb_logs:
-    #     tb_logger = TensorboardLogger(log_dir=output_dir + "/tb_logs")
+    if tb_logs:
+        tb_logger = TensorboardLogger(log_dir=output_dir + "/tb_logs")
         
-    #     tb_logger.attach_output_handler(
-    #         trainer,
-    #         event_name=Events.ITERATION_COMPLETED,
-    #         tag="Training",
-    #         output_transform=lambda loss: {"loss": loss}
-    #     )
+        tb_logger.attach_output_handler(
+            trainer,
+            event_name=Events.ITERATION_COMPLETED,
+            tag="Training",
+            output_transform=lambda loss: {"loss": loss}
+        )
 
-    #     tb_logger.attach_output_handler(
-    #         evaluator,
-    #         event_name=Events.EPOCH_COMPLETED,
-    #         tag="validation",
-    #         metric_names=["accuracy", "precision", "recall"],
-    #         global_step_transform=global_step_from_engine(trainer)
-    #     )
+        tb_logger.attach_output_handler(
+            evaluator,
+            event_name=Events.EPOCH_COMPLETED,
+            tag="validation",
+            metric_names=["accuracy", "precision", "recall"],
+            global_step_transform=global_step_from_engine(trainer)
+        )
 
     @trainer.on(Events.ITERATION_COMPLETED)
     def log_training_loss(engine):
@@ -100,9 +100,6 @@ def do_train(
             # print and save performance
             logger.info("Epoch[{}] Iteration[{}/{}] LR : {} Loss: {:.2f}"
                         .format(engine.state.epoch, iter, len(train_loader), optimizer.param_groups[0]['lr'], engine.state.metrics['avg_loss']))
-            for i, val_name in enumerate(cfg.val_dataset):
-                print('[{}]'.format(val_name))
-                accuracy, inf_time, _ = pair_matching_accuracy(model, val_dataset[i], val_labels[i], cfg.emd_size, device)
                         
     @trainer.on(Events.EPOCH_COMPLETED)
     def log_training_results(engine):
@@ -115,7 +112,7 @@ def do_train(
     if test_loader is not None:
         @trainer.on(Events.EPOCH_COMPLETED)
         def log_validation_results(engine):
-            evaluator.run(val_loader)
+            evaluator.run(test_loader)
             metrics = evaluator.state.metrics
             roc = metrics["roc"]
             logger.info("Validation Results - Epoch: {} ROC : {}"
@@ -129,6 +126,12 @@ def do_train(
                     .format(engine.state.epoch, timer.value() * timer.step_count,
                             train_loader.batch_size / timer.value()))
         timer.reset()
+
+        print('Validation Accuracy')
+
+        for i, val_name in enumerate(cfg.val_dataset):
+            print('[{}]'.format(val_name))
+            accuracy, inf_time, _ = pair_matching_accuracy(model, val_dataset[i], val_labels[i], cfg.emd_size, device)
 
     trainer.run(train_loader, max_epochs=epochs)
 

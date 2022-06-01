@@ -28,7 +28,7 @@ def train(cfg):
     arguments = {}
 
     train_loader, num_class = make_data_loader(cfg, is_train=True)
-    # val_loader, _ = make_data_loader(cfg, is_train=False)
+    test_loader, test_num_class = make_data_loader(cfg, is_train=False)
 
     # get the validation data
     val_dataset = []
@@ -47,7 +47,7 @@ def train(cfg):
         train_loader,
         val_dataset,
         val_labels,
-        None,
+        test_loader,
         optimizer,
         #None,
         scheduler,
